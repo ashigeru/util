@@ -17,9 +17,12 @@ package com.ashigeru.util.graph;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -28,14 +31,34 @@ import java.util.Set;
 public class Graphs {
 
     /**
-     * インスタンス生成の禁止。
+     * 頂点を一つも持たない{@code Graph}のインスタンスを生成して返す。
+     * @param <V> ノードを識別する値
+     * @return 生成したインスタンス
      */
-    private Graphs() {
-        throw new AssertionError();
+    public static <V> Graph<V> newInstance() {
+        return new HashGraph<V>();
     }
 
     /**
-     * 指定のノード一覧から直接または間接的に接続された全てのノードを返す。
+     * 指定のグラフのコピーを返す。
+     * @param <V> ノードを識別する値
+     * @param graph 対象のグラフ
+     * @return コピーしたグラフ
+     * @throws IllegalArgumentException 引数に{@code null}が含まれる場合
+     */
+    public static <V> Graph<V> copy(Graph<? extends V> graph) {
+        if (graph == null) {
+            throw new IllegalArgumentException("graph must not be null"); //$NON-NLS-1$
+        }
+        Graph<V> copy = newInstance();
+        for (Graph.Vertex<? extends V> vertex : graph) {
+            copy.addEdges(vertex.getNode(), vertex.getConnected());
+        }
+        return copy;
+    }
+
+    /**
+     * 指定のノード一覧から直接または間接的に後続する全てのノードを返す。
      * <p>
      * 返される集合に含まれる値は、{@code startNodes}に含まれるそれぞれの値から
      * 直接接続されたノードに割り当てられた値か、
@@ -62,6 +85,77 @@ public class Graphs {
             findAllConnected(graph, start, connected);
         }
         return connected;
+    }
+
+    /**
+     * 指定の開始ノードを起点に、後続するノードの中から条件に合致するノードの一覧を返す。
+     * <p>
+     * 返される集合は、次の条件を全て満たすような値{@code nearest}の集合である。
+     * </p>
+     * <ul>
+     * <li>
+     *   開始ノードのいずれかから、直接または間接的に接続されている
+     *   ({@link #findAllConnected(Graph, Collection)
+     *   findAllConnected(graph, startNodes).contains(nearest)})
+     * </li>
+     * <li>
+     *   受け入れ可能である
+     *   {@link Matcher#matches(Object) acceptor.accept(nearest)}
+     * </li>
+     * <li>
+     *   開始ノードのいずれかから、他の全ての{@code nearest}を経由せずに
+     *   対象の{@code nearest}に到達可能である。
+     * </li>
+     * </ul>
+     * @param <V> ノードを識別する値
+     * @param graph 対象のグラフ
+     * @param startNodes 対象の開始ノードに割り当てられた値の一覧
+     * @param acceptor 利用する条件、合致するるものが条件に合致したとみなされる
+     * @return 開始ノードから直接または間接的に接続されたすべてのノードのうち、
+     * @throws IllegalArgumentException 引数に{@code null}が含まれる場合
+     */
+    public static <V> Set<V> findNearest(
+            Graph<? extends V> graph,
+            Collection<? extends V> startNodes,
+            Matcher<? super V> acceptor) {
+        if (graph == null) {
+            throw new IllegalArgumentException("graph must not be null"); //$NON-NLS-1$
+        }
+        if (startNodes == null) {
+            throw new IllegalArgumentException("startNodes must not be null"); //$NON-NLS-1$
+        }
+        if (acceptor == null) {
+            throw new IllegalArgumentException("acceptor must not be null"); //$NON-NLS-1$
+        }
+        LinkedList<V> queue = new LinkedList<V>();
+        for (V start : startNodes) {
+            queue.addAll(graph.getConnected(start));
+        }
+
+        Set<V> saw = new HashSet<V>();
+        Set<V> results = new HashSet<V>();
+        while (queue.isEmpty() == false) {
+            V first = queue.removeFirst();
+
+            // キャッシュを利用
+            if (saw.contains(first)) {
+                continue;
+            }
+            saw.add(first);
+
+            // 該当するノードか検査
+            boolean accepted = acceptor.matches(first);
+
+            // 該当するノードならば結果に追加し、以降の探索を打ち切り
+            if (accepted) {
+                results.add(first);
+            }
+            // 該当するノードでなければ、続けて検索する
+            else {
+                queue.addAll(graph.getConnected(first));
+            }
+        }
+        return results;
     }
 
     /**
@@ -137,15 +231,6 @@ public class Graphs {
     }
 
     /**
-     * 頂点を一つも持たない{@code Graph}のインスタンスを生成して返す。
-     * @param <V> ノードを識別する値
-     * @return 生成したインスタンス
-     */
-    public static <V> Graph<V> newInstance() {
-        return new HashGraph<V>();
-    }
-
-    /**
      * 指定の有向グラフに含まれるノードの一覧を、接続の末尾から順に列挙する。
      * <p>
      * 対象のグラフに循環が存在しない場合、返されるリスト{@code list}と
@@ -200,6 +285,46 @@ public class Graphs {
         return results;
     }
 
+    /**
+     * 指定のグラフのうち、指定した頂点のみを持つ部分グラフを新しく作成して返す。
+     * @param <V> ノードを識別する値
+     * @param graph 対象のグラフ
+     * @param acceptor 部分グラフに含める頂点のみを許可するオブジェクト
+     * @return 生成した部分グラフ
+     * @throws IllegalArgumentException 引数に{@code null}が含まれる場合
+     */
+    public static <V> Graph<V> subgraph(
+            Graph<? extends V> graph,
+            Matcher<? super V> acceptor) {
+        if (graph == null) {
+            throw new IllegalArgumentException("graph must not be null"); //$NON-NLS-1$
+        }
+        if (acceptor == null) {
+            throw new IllegalArgumentException("acceptor must not be null"); //$NON-NLS-1$
+        }
+        Map<V, Boolean> accepted = new HashMap<V, Boolean>();
+        for (V vertex : graph.getNodeSet()) {
+            accepted.put(vertex, acceptor.matches(vertex));
+        }
+
+        Graph<V> subgraph = newInstance();
+        for (Graph.Vertex<? extends V> vertex : graph) {
+            assert accepted.containsKey(vertex.getNode());
+            V from = vertex.getNode();
+            if (accepted.get(from) == Boolean.FALSE) {
+                continue;
+            }
+            for (V to : vertex.getConnected()) {
+                assert accepted.containsKey(to);
+                if (accepted.get(vertex.getNode()) == Boolean.FALSE) {
+                    continue;
+                }
+                subgraph.addEdge(from, to);
+            }
+        }
+        return subgraph;
+    }
+
     private static <V> List<V> computePostOrderByDepth(Graph<? extends V> graph) {
         assert graph != null;
         List<V> results = new ArrayList<V>();
@@ -249,6 +374,13 @@ public class Graphs {
             }
             top = top.previous;
         }
+    }
+
+    /**
+     * インスタンス生成の禁止。
+     */
+    private Graphs() {
+        throw new AssertionError();
     }
 
     /**
