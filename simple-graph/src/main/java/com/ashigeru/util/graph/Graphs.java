@@ -73,7 +73,9 @@ public class Graphs {
      * @return 開始ノードから直接または間接的に接続されたすべてのノード
      * @throws IllegalArgumentException 引数に{@code null}が含まれる場合
      */
-    public static <V> Set<V> findAllConnected(Graph<? extends V> graph, Collection<? extends V> startNodes) {
+    public static <V> Set<V> collectAllConnected(
+            Graph<? extends V> graph,
+            Collection<? extends V> startNodes) {
         if (graph == null) {
             throw new IllegalArgumentException("graph is null"); //$NON-NLS-1$
         }
@@ -95,7 +97,7 @@ public class Graphs {
      * <ul>
      * <li>
      *   開始ノードのいずれかから、直接または間接的に接続されている
-     *   ({@link #findAllConnected(Graph, Collection)
+     *   ({@link #collectAllConnected(Graph, Collection)
      *   findAllConnected(graph, startNodes).contains(nearest)})
      * </li>
      * <li>
@@ -107,11 +109,16 @@ public class Graphs {
      *   対象の{@code nearest}に到達可能である。
      * </li>
      * </ul>
+     * <p>
+     * なお、返される一覧には、{@code startNodes}で指定された要素が通常含まれない。
+     * それらが結果に含まれる場合は、{@code startNodes}に含まれるいずれかの値が
+     * {@code startNodes}の後続にあり、かつ上記の条件を満たしている。
+     * </p>
      * @param <V> ノードを識別する値
      * @param graph 対象のグラフ
      * @param startNodes 対象の開始ノードに割り当てられた値の一覧
      * @param acceptor 利用する条件、合致するるものが条件に合致したとみなされる
-     * @return 開始ノードから直接または間接的に接続されたすべてのノードのうち、
+     * @return 後続するノードのうち条件に合致するノードの一覧
      * @throws IllegalArgumentException 引数に{@code null}が含まれる場合
      */
     public static <V> Set<V> findNearest(
@@ -152,6 +159,70 @@ public class Graphs {
             }
             // 該当するノードでなければ、続けて検索する
             else {
+                queue.addAll(graph.getConnected(first));
+            }
+        }
+        return results;
+    }
+
+    /**
+     * 指定の開始ノードを起点に、後続するノードの中から条件に合致するノードの一覧と、
+     * そこまでのノードの一覧を返す。
+     * <p>
+     * このメソッドは、{@link #findNearest(Graph, Collection, Matcher)}の
+     * 探索経路上のすべてのノードを含めて返す。
+     * </p>
+     * <p>
+     * なお、返される一覧には、{@code startNodes}で指定された要素が通常含まれない。
+     * それらが結果に含まれる場合は、{@code startNodes}に含まれるいずれかの値が
+     * {@code startNodes}の後続にあり、かつ上記の条件を満たしている。
+     * </p>
+     * @param <V> ノードを識別する値
+     * @param graph 対象のグラフ
+     * @param startNodes 対象の開始ノードに割り当てられた値の一覧
+     * @param acceptor 利用する条件、合致するるものが条件に合致したとみなされる
+     * @return 後続するノードのうち条件に合致するノードと、そこまでのノードの一覧
+     * @throws IllegalArgumentException 引数に{@code null}が含まれる場合
+     */
+    public static <V> Set<V> collectNearest(
+            Graph<? extends V> graph,
+            Collection<? extends V> startNodes,
+            Matcher<? super V> acceptor) {
+        if (graph == null) {
+            throw new IllegalArgumentException("graph must not be null"); //$NON-NLS-1$
+        }
+        if (startNodes == null) {
+            throw new IllegalArgumentException("startNodes must not be null"); //$NON-NLS-1$
+        }
+        if (acceptor == null) {
+            throw new IllegalArgumentException("acceptor must not be null"); //$NON-NLS-1$
+        }
+        LinkedList<V> queue = new LinkedList<V>();
+        for (V start : startNodes) {
+            queue.addAll(graph.getConnected(start));
+        }
+
+        Set<V> saw = new HashSet<V>();
+        Set<V> results = new HashSet<V>();
+        while (queue.isEmpty() == false) {
+            V first = queue.removeFirst();
+
+            // キャッシュを利用
+            if (saw.contains(first)) {
+                continue;
+            }
+            saw.add(first);
+
+            // 該当するノードか検査
+            boolean accepted = acceptor.matches(first);
+
+            // 該当するノードならば結果に追加し、以降の探索を打ち切り
+            if (accepted) {
+                results.add(first);
+            }
+            // 該当するノードでなければ、続けて検索する
+            else {
+                results.add(first);
                 queue.addAll(graph.getConnected(first));
             }
         }
@@ -302,21 +373,28 @@ public class Graphs {
         if (acceptor == null) {
             throw new IllegalArgumentException("acceptor must not be null"); //$NON-NLS-1$
         }
+        Graph<V> subgraph = newInstance();
         Map<V, Boolean> accepted = new HashMap<V, Boolean>();
         for (V vertex : graph.getNodeSet()) {
-            accepted.put(vertex, acceptor.matches(vertex));
+            boolean matched = acceptor.matches(vertex);
+            if (matched) {
+                subgraph.addNode(vertex);
+            }
+            accepted.put(vertex, matched);
+        }
+        if (subgraph.isEmpty()) {
+            return subgraph;
         }
 
-        Graph<V> subgraph = newInstance();
         for (Graph.Vertex<? extends V> vertex : graph) {
-            assert accepted.containsKey(vertex.getNode());
             V from = vertex.getNode();
+            assert accepted.containsKey(from);
             if (accepted.get(from) == Boolean.FALSE) {
                 continue;
             }
             for (V to : vertex.getConnected()) {
                 assert accepted.containsKey(to);
-                if (accepted.get(vertex.getNode()) == Boolean.FALSE) {
+                if (accepted.get(to) == Boolean.FALSE) {
                     continue;
                 }
                 subgraph.addEdge(from, to);
