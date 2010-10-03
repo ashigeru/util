@@ -40,7 +40,6 @@ public class SingleLinkedList<E> implements Iterable<E>, Serializable {
      * 要素を含まないリストを作成して返す。
      */
     public SingleLinkedList() {
-        super();
         head = null;
     }
 
@@ -232,16 +231,19 @@ public class SingleLinkedList<E> implements Iterable<E>, Serializable {
         return fill(new ArrayList<E>()).toString();
     }
 
-    private static class Node<E> {
+    private static final class Node<E> {
+
         E value;
+
         Node<E> next;
+
         Node(E value, Node<E> next) {
             this.value = value;
             this.next = next;
         }
     }
 
-    private static class NodeIterator<E> implements Iterator<E> {
+    private static final class NodeIterator<E> implements Iterator<E> {
 
         private Node<E> current;
 
