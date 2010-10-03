@@ -151,6 +151,11 @@ public class Tuples {
      * 返される比較器は、第一要素、第二要素の順に辞書式の比較を行う。
      * また、それぞれの要素の比較には、引数に指定した比較器を利用する。
      * </p>
+     * <p>
+     * ただし、それぞれの要素に{@code null}を含む場合、
+     * {@code null}は他のどの値よりも小さな値として処理される。
+     * また、{@code null}は他の{@code null}に等しい。
+     * </p>
      * @param <T1> 第一要素の型
      * @param <T2> 第二要素の型
      * @param firstComparator 第一要素の比較器
@@ -194,8 +199,8 @@ public class Tuples {
         @Override
         public int compare(Tuple2<T1, T2> o1, Tuple2<T1, T2> o2) {
             int diff1 = Tuples.compare(_1, o1._1, o2._1);
-            if (diff1 == 0) {
-                return 0;
+            if (diff1 != 0) {
+                return diff1;
             }
             return Tuples.compare(_2, o1._2, o2._2);
         }

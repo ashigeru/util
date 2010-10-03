@@ -23,12 +23,12 @@ package com.ashigeru.util.collection;
 public class Tuple2<T1, T2> {
 
     /**
-     * 第一要素を表す。
+     * 第一要素。
      */
     public final T1 _1;
 
     /**
-     * 第二要素を表す。
+     * 第二要素。
      */
     public final T2 _2;
 
