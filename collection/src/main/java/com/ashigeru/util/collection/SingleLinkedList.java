@@ -159,6 +159,7 @@ public class SingleLinkedList<E> implements Iterable<E>, Serializable {
         return node.value;
     }
 
+    @Override
     public Iterator<E> iterator() {
         return new NodeIterator<E>(head);
     }
@@ -251,10 +252,12 @@ public class SingleLinkedList<E> implements Iterable<E>, Serializable {
             this.current = node;
         }
 
+        @Override
         public boolean hasNext() {
             return current != null;
         }
 
+        @Override
         public E next() {
             if (current == null) {
                 throw new NoSuchElementException();
@@ -264,6 +267,7 @@ public class SingleLinkedList<E> implements Iterable<E>, Serializable {
             return value;
         }
 
+        @Override
         public void remove() {
             throw new UnsupportedOperationException();
         }
