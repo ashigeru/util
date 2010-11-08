@@ -538,6 +538,20 @@ public class GraphsTest {
      * Test method for {@link Graphs#transpose(Graph)}.
      */
     @Test
+    public void testTransposeGraph_noEdges() {
+        Graph<Integer> graph = Graphs.newInstance();
+        prepare(graph, 1);
+
+        Graph<Integer> expect = Graphs.newInstance();
+        prepare(expect, 1);
+
+        assertThat(Graphs.transpose(graph), is(expect));
+    }
+
+    /**
+     * Test method for {@link Graphs#transpose(Graph)}.
+     */
+    @Test
     public void testTransposeGraph() {
         Graph<Integer> graph = Graphs.newInstance();
         prepare(graph, 1);

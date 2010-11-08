@@ -334,7 +334,7 @@ public class Graphs {
      * 返されるグラフ{@code reverse}は常に次が成り立つ。
      * </p>
      * <pre>{@code
-     * graph.contains(a) <=> reverse.contains(b);
+     * graph.contains(a) <=> reverse.contains(a);
      * graph.isConnected(a, b) <=> reverse.isConnected(b, a)
      * }</pre>
      * @param <V> ノードを識別する値
@@ -349,6 +349,7 @@ public class Graphs {
         Graph<V> results = new HashGraph<V>();
         for (Graph.Vertex<V> vertex : graph) {
             V from = vertex.getNode();
+            results.addNode(from);
             for (V to : vertex.getConnected()) {
                 results.addEdge(to, from);
             }
