@@ -572,7 +572,134 @@ public class GraphsTest {
         assertThat(Graphs.transpose(graph), is(expect));
     }
 
+    /**
+     * Test method for {@link Graphs#collectHeads(Graph)}.
+     */
+    @Test
+    public void testCollectHeads_empty() {
+        Graph<Integer> graph = Graphs.newInstance();
+        assertThat(Graphs.collectHeads(graph), is(set()));
+    }
+
+    /**
+     * Test method for {@link Graphs#collectHeads(Graph)}.
+     */
+    @Test
+    public void testCollectHeads_single() {
+        Graph<Integer> graph = Graphs.newInstance();
+        addPath(graph, 1);
+        assertThat(Graphs.collectHeads(graph), is(set(1)));
+    }
+
+    /**
+     * Test method for {@link Graphs#collectHeads(Graph)}.
+     */
+    @Test
+    public void testCollectHeads_connected() {
+        Graph<Integer> graph = Graphs.newInstance();
+        addPath(graph, 1, 2, 3);
+        assertThat(Graphs.collectHeads(graph), is(set(1)));
+    }
+
+    /**
+     * Test method for {@link Graphs#collectHeads(Graph)}.
+     */
+    @Test
+    public void testCollectHeads_disconnected() {
+        Graph<Integer> graph = Graphs.newInstance();
+        addPath(graph, 1);
+        addPath(graph, 2);
+        addPath(graph, 3);
+        addPath(graph, 4);
+        assertThat(Graphs.collectHeads(graph), is(set(1, 2, 3, 4)));
+    }
+
+    /**
+     * Test method for {@link Graphs#collectHeads(Graph)}.
+     */
+    @Test
+    public void testCollectHeads_multi() {
+        Graph<Integer> graph = Graphs.newInstance();
+        addPath(graph, 1, 2, 3);
+        addPath(graph, 4, 2, 5);
+        assertThat(Graphs.collectHeads(graph), is(set(1, 4)));
+    }
+
+    /**
+     * Test method for {@link Graphs#collectHeads(Graph)}.
+     */
+    @Test
+    public void testCollectHeads_cyclic() {
+        Graph<Integer> graph = Graphs.newInstance();
+        addPath(graph, 1, 2, 3, 4, 1);
+        assertThat(Graphs.collectHeads(graph), is(set()));
+    }
+
+    /**
+     * Test method for {@link Graphs#collectTails(Graph)}.
+     */
+    @Test
+    public void testCollectTails_empty() {
+        Graph<Integer> graph = Graphs.newInstance();
+        assertThat(Graphs.collectTails(graph), is(set()));
+    }
+
+    /**
+     * Test method for {@link Graphs#collectTails(Graph)}.
+     */
+    @Test
+    public void testCollectTails_single() {
+        Graph<Integer> graph = Graphs.newInstance();
+        addPath(graph, 1);
+        assertThat(Graphs.collectTails(graph), is(set(1)));
+    }
+
+    /**
+     * Test method for {@link Graphs#collectTails(Graph)}.
+     */
+    @Test
+    public void testCollectTails_connected() {
+        Graph<Integer> graph = Graphs.newInstance();
+        addPath(graph, 1, 2, 3);
+        assertThat(Graphs.collectTails(graph), is(set(3)));
+    }
+
+    /**
+     * Test method for {@link Graphs#collectTails(Graph)}.
+     */
+    @Test
+    public void testCollectTails_disconnected() {
+        Graph<Integer> graph = Graphs.newInstance();
+        addPath(graph, 1);
+        addPath(graph, 2);
+        addPath(graph, 3);
+        addPath(graph, 4);
+        assertThat(Graphs.collectTails(graph), is(set(1, 2, 3, 4)));
+    }
+
+    /**
+     * Test method for {@link Graphs#collectTails(Graph)}.
+     */
+    @Test
+    public void testCollectTails_multi() {
+        Graph<Integer> graph = Graphs.newInstance();
+        addPath(graph, 1, 2, 3);
+        addPath(graph, 4, 2, 5);
+        assertThat(Graphs.collectTails(graph), is(set(3, 5)));
+    }
+
+    /**
+     * Test method for {@link Graphs#collectTails(Graph)}.
+     */
+    @Test
+    public void testCollectTails_cyclic() {
+        Graph<Integer> graph = Graphs.newInstance();
+        addPath(graph, 1, 2, 3, 4, 1);
+        assertThat(Graphs.collectTails(graph), is(set()));
+    }
+
     private <V> void addPath(Graph<V> graph, V first, V...vertexes) {
+        graph.addNode(first);
         V current = first;
         for (V v : vertexes) {
             graph.addEdge(current, v);

@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.ashigeru.util.graph.Graph.Vertex;
+
 /**
  * {@link Graph}に関する操作を行うライブラリ。
  */
@@ -55,6 +57,44 @@ public class Graphs {
             copy.addEdges(vertex.getNode(), vertex.getConnected());
         }
         return copy;
+    }
+
+    /**
+     * 指定のグラフに含まれるノードのうち、先行するノードが存在しないものの一覧を返す。
+     * @param <V> ノードを識別する値
+     * @param graph 対象のグラフ
+     * @return 指定のグラフに含まれ、かつ先行するノードが存在しないものの一覧
+     * @throws IllegalArgumentException 引数に{@code null}が含まれる場合
+     */
+    public static <V> Set<V> collectHeads(Graph<? extends V> graph) {
+        if (graph == null) {
+            throw new IllegalArgumentException("graph must not be null"); //$NON-NLS-1$
+        }
+        Set<V> results = new HashSet<V>(graph.getNodeSet());
+        for (Vertex<? extends V> vertex : graph) {
+            results.removeAll(vertex.getConnected());
+        }
+        return results;
+    }
+
+    /**
+     * 指定のグラフに含まれるノードのうち、後続するノードが存在しないものの一覧を返す。
+     * @param <V> ノードを識別する値
+     * @param graph 対象のグラフ
+     * @return 指定のグラフに含まれ、かつ後続するノードが存在しないものの一覧
+     * @throws IllegalArgumentException 引数に{@code null}が含まれる場合
+     */
+    public static <V> Set<V> collectTails(Graph<? extends V> graph) {
+        if (graph == null) {
+            throw new IllegalArgumentException("graph must not be null"); //$NON-NLS-1$
+        }
+        Set<V> results = new HashSet<V>();
+        for (Vertex<? extends V> vertex : graph) {
+            if (vertex.getConnected().isEmpty()) {
+                results.add(vertex.getNode());
+            }
+        }
+        return results;
     }
 
     /**
