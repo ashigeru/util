@@ -11,5 +11,6 @@
 	<modules>
 		<module>collection</module>
 		<module>simple-graph</module>
+		<module>serialization</module>
 	</modules>
 </project>
