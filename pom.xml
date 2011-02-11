@@ -12,5 +12,6 @@
 		<module>collection</module>
 		<module>simple-graph</module>
 		<module>serialization</module>
+		<module>reflection</module>
 	</modules>
 </project>
