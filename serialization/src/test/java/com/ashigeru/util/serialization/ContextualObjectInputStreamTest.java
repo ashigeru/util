@@ -28,9 +28,8 @@ import java.util.Date;
 import org.junit.Test;
 
 /**
- * TODO
+ * Test for {@link ContextualObjectInputStream}.
  * @author ashigeru
- *
  */
 public class ContextualObjectInputStreamTest {
 
@@ -102,7 +101,7 @@ public class ContextualObjectInputStreamTest {
     }
 
     /**
-     * システムクラス。
+     * システムクラスの配列。
      * @throws Exception テスト失敗
      */
     @Test
@@ -118,7 +117,7 @@ public class ContextualObjectInputStreamTest {
     }
 
     /**
-     * システムクラス。
+     * プリミティブ型の配列。
      * @throws Exception テスト失敗
      */
     @Test
