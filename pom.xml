@@ -9,6 +9,7 @@
     <name>ashigeru's utilities</name>
 	<packaging>pom</packaging>
 	<modules>
+		<module>parent</module>
 		<module>collection</module>
 		<module>simple-graph</module>
 		<module>serialization</module>
